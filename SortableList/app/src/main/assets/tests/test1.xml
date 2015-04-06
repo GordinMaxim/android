@@ -1,0 +1,19 @@
+<test name="Test 1">
+    <questions class="java.util.LinkedList">
+        <question name="Question 1">
+            <answers class="java.util.LinkedList">
+                <answer name="answer 1" value="1" stop="false" result="answer result"/>
+                <answer name="answer 2" value="2"/>
+            </answers>
+        </question>
+        <question name="Question 2">
+            <answers class="java.util.LinkedList">
+                <answer name="answer 3" value="3" stop="false"/>
+            </answers>
+        </question>
+    </questions>
+    <results class="java.util.LinkedList">
+        <testResult topValue="4" result="result 1"/>
+        <testResult topValue="7" result="result 2"/>
+    </results>
+</test>
