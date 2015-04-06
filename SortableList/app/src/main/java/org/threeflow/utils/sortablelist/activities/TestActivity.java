@@ -36,8 +36,10 @@ import android.widget.TextView;
 
 import org.threeflow.utils.sortablelist.R;
 import org.threeflow.utils.sortablelist.SortableListViewActivity;
+import org.threeflow.utils.sortablelist.test.model.Test;
 
 public class TestActivity extends FragmentActivity {
+    private Test test;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments representing
@@ -57,20 +59,23 @@ public class TestActivity extends FragmentActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_collection_demo);
+        Intent intent = getIntent();
+        String key = intent.getStringExtra(SortableListViewActivity.EXTRA_TEST);
+        test = SortableListViewActivity.TESTS.get(key);
 
         // Create an adapter that when requested, will return a fragment representing an object in
         // the collection.
         // 
         // ViewPager and its adapters use support library fragments, so we must use
         // getSupportFragmentManager.
-        mDemoCollectionPagerAdapter = new DemoCollectionPagerAdapter(getSupportFragmentManager());
+        mDemoCollectionPagerAdapter = new DemoCollectionPagerAdapter(getSupportFragmentManager(), test);
 
         // Set up action bar.
-        final ActionBar actionBar = getActionBar();
+//        final ActionBar actionBar = getActionBar();
 
         // Specify that the Home button should show an "Up" caret, indicating that touching the
         // button will take the user one step up in the application's hierarchy.
-        actionBar.setDisplayHomeAsUpEnabled(true);
+//        actionBar.setDisplayHomeAsUpEnabled(true);
 
         // Set up the ViewPager, attaching the adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -108,9 +113,11 @@ public class TestActivity extends FragmentActivity {
      * representing an object in the collection.
      */
     public static class DemoCollectionPagerAdapter extends FragmentPagerAdapter {
+        private Test test;
 
-        public DemoCollectionPagerAdapter(FragmentManager fm) {
+        public DemoCollectionPagerAdapter(FragmentManager fm, Test test) {
             super(fm);
+            this.test = test;
         }
 
         @Override
@@ -125,12 +132,12 @@ public class TestActivity extends FragmentActivity {
         @Override
         public int getCount() {
             // For this contrived example, we have a 100-object collection.
-            return 100;
+            return test.getQuestions().size();
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return "OBJECT " + (position + 1);
+            return "Question " + (position + 1);
         }
     }
 

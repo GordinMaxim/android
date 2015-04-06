@@ -13,7 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Root
-public class Test implements Parcelable, Serializable {
+public class Test {
 
     @Attribute(required = false)
     private String name;
@@ -24,13 +24,7 @@ public class Test implements Parcelable, Serializable {
     @ElementList(required = false)
     private LinkedList<TestResult> results;
 
-    public Test(){}
 
-    public Test(Parcel source) {
-        name = source.readString();
-        source.readList(questions, Question.class.getClassLoader());
-        source.readList(results, TestResult.class.getClassLoader());
-    }
 
     public LinkedList<Question> getQuestions() {
         return questions;
@@ -61,28 +55,4 @@ public class Test implements Parcelable, Serializable {
     public void setResults(LinkedList<TestResult> results) {
         this.results = results;
     }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeList(questions);
-        dest.writeList(results);
-    }
-
-    public static final Parcelable.Creator<Test> CREATOR = new Creator<Test>() {
-        @Override
-        public Test createFromParcel(Parcel source) {
-            return new Test(source);
-        }
-
-        @Override
-        public Test[] newArray(int size) {
-            return new Test[size];
-        }
-    };
 }

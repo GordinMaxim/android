@@ -10,7 +10,7 @@ import org.simpleframework.xml.Root;
 import java.io.Serializable;
 
 @Root
-public class Answer implements Serializable, Parcelable {
+public class Answer {
     @Attribute(required = true)
     private String name;
 
@@ -23,14 +23,6 @@ public class Answer implements Serializable, Parcelable {
     @Attribute(required = false)
     private String result = "";
 
-    public Answer(){}
-
-    public Answer(Parcel source) {
-        name = source.readString();
-        value = source.readInt();
-        stop = (source.readInt() == 1);
-        result = source.readString();
-    }
 
     public String getName() {
         return name;
@@ -63,30 +55,4 @@ public class Answer implements Serializable, Parcelable {
     public void setResult(String result) {
         this.result = result;
     }
-
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeInt(value);
-        dest.writeInt(stop ? 1 : 0);
-        dest.writeString(result);
-    }
-
-    Creator<Answer> CREATOR = new Creator<Answer>() {
-        @Override
-        public Answer createFromParcel(Parcel source) {
-            return new Answer(source);
-        }
-
-        @Override
-        public Answer[] newArray(int size) {
-            return new Answer[size];
-        }
-    };
 }

@@ -23,14 +23,15 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 
 public class SortableListViewActivity extends ListActivity {
     public static final String EXTRA_TEST = "EXTRA_TEST";
-
-    private static final String TEST_DIR = "tests";
+    public static final String TEST_DIR = "tests";
+    public static final HashMap<String, Test> TESTS = new HashMap<>();
 
     private Object[] sArray = {"failed to init, please report us"};
     private String entriesFile = "entries";
@@ -70,29 +71,31 @@ public class SortableListViewActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        File savedSession = getBaseContext().getFileStreamPath(entriesFile);
-        if(!savedSession.exists()) {
-            System.out.println("[ORDER FILE NOT FOUND]");
-            List<MainMenuEntry> menuEntryList = new LinkedList<>();
-            try {
-                for (String s : getAssets().list(TEST_DIR)) {
-                    InputStream in = getAssets().open(TEST_DIR + "/" + s);
-                    Serializer serializer = new Persister();
-                    Test test = serializer.read(Test.class, in);
-                    MainMenuTestEntry testEntry = new MainMenuTestEntry();
-                    testEntry.setTest(test);
-                    testEntry.setActivityClass(TestActivity.class);
-                    menuEntryList.add(testEntry);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
+        List<MainMenuEntry> menuEntryList = new LinkedList<>();
+        try {
+            for (String s : getAssets().list(TEST_DIR)) {
+                InputStream in = getAssets().open(TEST_DIR + "/" + s);
+                Serializer serializer = new Persister();
+                Test test = serializer.read(Test.class, in);
+                MainMenuTestEntry entry = new MainMenuTestEntry();
+                TESTS.put(test.getName(), test);
+                entry.setExtraKey(test.getName());
+                entry.setTitle(test.getName());
+                entry.setActivityClass(TestActivity.class);
+                menuEntryList.add(entry);
+                System.out.println(entry.toString());
+                System.out.println(Arrays.toString(menuEntryList.toArray()));
             }
-
-            sArray = menuEntryList.toArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        else {
+
+        sArray = menuEntryList.toArray();
+        File savedSession = getBaseContext().getFileStreamPath(entriesFile);
+
+        if(savedSession.exists()) {
             System.out.println("[ORDER FILE FOUND]");
             try {
                 FileInputStream inputStream = openFileInput(entriesFile);
@@ -112,13 +115,13 @@ public class SortableListViewActivity extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         MainMenuEntry entry = (MainMenuEntry)sArray[position];
-//        Toast.makeText(this, selection, Toast.LENGTH_SHORT).show();
+        String selection = sArray[position].toString();
+        Toast.makeText(this, selection, Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, entry.getActivityClass());
 
         if(entry instanceof MainMenuTestEntry) {
-//            intent.putExtra(EXTRA_TEST, (android.os.Parcelable) ((MainMenuTestEntry) entry).getTest());
+            intent.putExtra(EXTRA_TEST, ((MainMenuTestEntry) entry).getExtraKey());
         }
-
         startActivity(intent);
     }
 
