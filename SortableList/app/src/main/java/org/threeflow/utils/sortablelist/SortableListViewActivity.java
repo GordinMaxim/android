@@ -4,7 +4,6 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -13,7 +12,7 @@ import android.widget.Toast;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.threeflow.utils.sortablelist.activities.TestActivity;
+import org.threeflow.utils.sortablelist.activities.quiz.TestActivity;
 import org.threeflow.utils.sortablelist.test.model.Test;
 
 import java.io.File;

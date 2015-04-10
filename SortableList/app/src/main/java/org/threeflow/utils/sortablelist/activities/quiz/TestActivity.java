@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.threeflow.utils.sortablelist.activities;
+package org.threeflow.utils.sortablelist.activities.quiz;
 
 import android.annotation.TargetApi;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,13 +33,23 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import org.threeflow.utils.sortablelist.R;
 import org.threeflow.utils.sortablelist.SortableListViewActivity;
+import org.threeflow.utils.sortablelist.test.model.Answer;
+import org.threeflow.utils.sortablelist.test.model.Question;
 import org.threeflow.utils.sortablelist.test.model.Test;
+import org.threeflow.utils.sortablelist.test.model.TestResult;
 
-public class TestActivity extends FragmentActivity {
+import java.util.LinkedList;
+import java.util.List;
+
+
+public class TestActivity extends FragmentActivity implements OnRadioButtonSelectionListener {
+    public static final String EXTRA_RESULT = "EXTRA_RESULT";
     private Test test;
 
     /**
@@ -49,6 +60,8 @@ public class TestActivity extends FragmentActivity {
      * allowing navigation between objects in a potentially large collection.
      */
     DemoCollectionPagerAdapter mDemoCollectionPagerAdapter;
+
+    Answer[] answers;
 
     /**
      * The {@link android.support.v4.view.ViewPager} that will display the object collection.
@@ -70,6 +83,7 @@ public class TestActivity extends FragmentActivity {
         // getSupportFragmentManager.
         mDemoCollectionPagerAdapter = new DemoCollectionPagerAdapter(getSupportFragmentManager(), test);
 
+        answers = new Answer[DemoCollectionPagerAdapter.questions.size()];
         // Set up action bar.
 //        final ActionBar actionBar = getActionBar();
 
@@ -108,23 +122,58 @@ public class TestActivity extends FragmentActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onRadioButtonSelect(int id, Answer answer) {
+        answers[id] = answer;
+        int i = 0;
+        for(; i < answers.length; i++) {
+            if(null == answers[i]) break;
+        }
+//        System.out.println("index i == " + i);
+        int sum = 0;
+        String result = "";
+        if(i == answers.length) {
+            for(Answer a : answers) {
+                if(a.isStop()) break;
+                sum += a.getValue();
+            }
+//            for(Answer a : answers) {
+//                if(a.isStop()) break;
+//                if()
+//            }
+
+            for(TestResult res : test.getResults()) {
+                if(sum < res.getTopValue()) {
+                    result += res.getResult() + ".\n";
+                    break;
+                }
+            }
+            Intent intent = new Intent(this, FinalActivity.class);
+            intent.putExtra(EXTRA_RESULT, result);
+            startActivity(intent);
+        }
+
+        if(mViewPager.getCurrentItem() + 1 < mDemoCollectionPagerAdapter.getCount())
+            mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+    }
+
     /**
      * A {@link android.support.v4.app.FragmentStatePagerAdapter} that returns a fragment
      * representing an object in the collection.
      */
     public static class DemoCollectionPagerAdapter extends FragmentPagerAdapter {
-        private Test test;
+        public static List<Question> questions;
 
         public DemoCollectionPagerAdapter(FragmentManager fm, Test test) {
             super(fm);
-            this.test = test;
+            this.questions = test.getQuestions();
         }
 
         @Override
         public Fragment getItem(int i) {
             Fragment fragment = new DemoObjectFragment();
             Bundle args = new Bundle();
-            args.putInt(DemoObjectFragment.ARG_OBJECT, i + 1); // Our object is just an integer :-P
+            args.putInt(DemoObjectFragment.ARG_OBJECT, i); // Our object is just an integer :-P
             fragment.setArguments(args);
             return fragment;
         }
@@ -132,30 +181,70 @@ public class TestActivity extends FragmentActivity {
         @Override
         public int getCount() {
             // For this contrived example, we have a 100-object collection.
-            return test.getQuestions().size();
+            return questions.size();
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return "Question " + (position + 1);
+            return "Вопрос " + (position + 1);
         }
     }
 
     /**
      * A dummy fragment representing a section of the app, but that simply displays dummy text.
      */
-    public static class DemoObjectFragment extends Fragment {
+    public static class DemoObjectFragment extends Fragment implements RadioGroup.OnCheckedChangeListener {
+        private OnRadioButtonSelectionListener mCallback;
 
         public static final String ARG_OBJECT = "object";
 
         @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            try {
+                mCallback = (OnRadioButtonSelectionListener) activity;
+            }
+            catch (ClassCastException e) {
+                throw new ClassCastException(activity.toString() +
+                        " must implement OnRadioButtonSelectionListener");
+            }
+        }
+
+        @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+        @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+
             View rootView = inflater.inflate(R.layout.fragment_collection_object, container, false);
             Bundle args = getArguments();
-            ((TextView) rootView.findViewById(android.R.id.text1)).setText(
-                    Integer.toString(args.getInt(ARG_OBJECT)));
+            int id = args.getInt(ARG_OBJECT);
+
+            TextView title = (TextView)rootView.findViewById(R.id.question_title);
+            title.setText(DemoCollectionPagerAdapter.questions.get(id).getName());
+            title.setTextSize(32);
+
+            RadioGroup radios = (RadioGroup) rootView.findViewById(R.id.radio_group);
+            radios.setOnCheckedChangeListener(this);
+            List<Answer> answers = DemoCollectionPagerAdapter.questions.get(id).getAnswers();
+            for(Answer answer : answers) {
+                RadioButton button = new RadioButton((Activity)mCallback);
+                button.setText(answer.getName());
+                button.setId(answers.indexOf(answer));
+                button.setTextSize(24);
+                button.setLayoutParams(new ActionBar.LayoutParams(radios.getLayoutParams()));
+                button.setPaddingRelative(0, 30, 0, 30);
+                radios.addView(button);
+            }
             return rootView;
+        }
+
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            Bundle args = getArguments();
+            int id = args.getInt(ARG_OBJECT);
+            System.out.println("Question: " + id + ", checked radio button ID " + checkedId);
+            Answer answer = DemoCollectionPagerAdapter.questions.get(id).getAnswers().get(checkedId);
+            mCallback.onRadioButtonSelect(id, answer);
         }
     }
 }
